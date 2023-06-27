@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sparse
 from tqdm import tqdm
+from time import time 
 
 # internal modules
 from special_funcs import sphrharm,chebspace
@@ -45,6 +46,7 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
     
     if symm == 0:
         
+        print('generating matrices for even W')
         for l in tqdm(range(2,lmax-1,2)):
             
             lp = l * (l+1)
@@ -53,7 +55,8 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             LoB[l][l] = (lp * (1j*freq*I + E*L2) -2j*m*I)* orr_mul2 * L2 
             LoB[l][l+1] = -2 * l * (l+2)*c[l] * ( df1 + (l+1) * orr_mul)*orr_mul2
             LoB[l][l-1] = -2 * (l-1) * (l+1) * c[l-1] * (df1 - l * orr_mul)*orr_mul2
-            
+        
+        print('\ngenerating matrices for odd Z')
         for l in tqdm(range(1,lmax,2)):
             
             lp = l * (l+1)
@@ -65,7 +68,9 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             
 
         M = sparse.bmat(LoB,format='lil',dtype=np.cfloat)
-
+        print('\nBlock matrix built...\n')
+        
+        print('Boundary conditions for W')
         for l in tqdm(range(2,lmax-1,2)):
             
             
@@ -81,7 +86,8 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             
             M[(l+1)*nr-2,(l-1)*nr:(l+2)*nr] = 0
             M[(l+1)*nr-2,(l+1)*nr-2] = 1
-            
+        
+        print('\nBoundary conditions for Z')
         for l in tqdm(range(1,lmax,2)):
              
             if eta != 0:
@@ -94,6 +100,7 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             
     if symm == 1:
         
+        print('\ngenerating matrices for odd W')
         for l in tqdm(range(1,lmax,2)):
             
             lp = l * (l+1)
@@ -102,7 +109,8 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             LoB[l][l] = (lp * (1j*freq*I + E*L2) -2j*m*I)* orr_mul2 * L2 
             LoB[l][l+1] = -2 * l * (l+2)*c[l] * ( df1 + (l+1) * orr_mul)*orr_mul2
             LoB[l][l-1] = -2 * (l-1) * (l+1) * c[l-1] * (df1 - l * orr_mul)*orr_mul2
-            
+        
+        print('\ngenerating matrices for even Z')
         for l in tqdm(range(2,lmax-1,2)):
             
             lp = l * (l+1)
@@ -114,7 +122,9 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             
 
         M = sparse.bmat(LoB,format='lil',dtype=np.cfloat)
-
+        print('\nBlock matrix built...\n')
+        
+        print('Boundary conditions for W')
         for l in tqdm(range(1,lmax,2)):
             
             
@@ -130,7 +140,8 @@ def gen_matrix(freq,E,eta,lmax,nr,m,symm):
             
             M[(l+1)*nr-2,(l-1)*nr:(l+2)*nr] = 0
             M[(l+1)*nr-2,(l+1)*nr-2] = 1
-            
+        
+        print('\nBoundary conditions for Z')
         for l in tqdm(range(2,lmax-1,2)):
              
             if eta != 0:
@@ -193,10 +204,12 @@ def matrix_solve(A_even,A_odd,freq,E,eta,lmax,nr,m):
     
     if any([x!=0 for x in A_even]):
         
+        print('There is equatorially symmetric forcing...\n')
         M = gen_matrix(freq,E,eta,lmax,nr,m,0)
         
+        t0 = time()
         coeffs =  sparse.linalg.spsolve(sparse.csc_matrix(M),A_even)
-        
+        print('\nEquatorially symmetric system solved ({:.2e}s)'.format(time()-t0))
         for l in range(0,lmax-1,2):
             
             W[l,:] = coeffs[l*nr:(l+1)*nr]
@@ -205,9 +218,11 @@ def matrix_solve(A_even,A_odd,freq,E,eta,lmax,nr,m):
             
     if any([x!=0 for x in A_odd]):
         
+        print('There is equatorially anti-symmetric forcing...\n')
         M = gen_matrix(freq,E,eta,lmax,nr,m,1)
         
         coeffs =  sparse.linalg.spsolve(sparse.csc_matrix(M),A_odd)
+        print('\nEquatorially symmetric system solved ({:.2e}s)'.format(time()-t0))
         
         for l in range(1,lmax,2):
             
