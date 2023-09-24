@@ -27,7 +27,6 @@ def calc_kinetics(W,DW,Z,eta,m,theta):
     ll = np.linspace(0,lmax,lmax+1)
     c = np.sqrt((ll-m+1)*(ll+m+1)/(2*ll+1)/(2*ll+3))
 
-    print(np.shape(YY),np.shape(W))
     for l in range(lmax+1):
             
         q_r += YY[l][np.newaxis,:] * W[l][:,np.newaxis] * l * (l+1) * orr[:,np.newaxis]**2

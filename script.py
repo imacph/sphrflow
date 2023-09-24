@@ -27,9 +27,7 @@ Z_b = np.zeros(lmax+1)
 Z_t[1] = 1
 
 
-A_even,A_odd = gen_rhs(W_t, W_b, DW_t, DW_b, Z_t, Z_b, lmax, nr, eta)
-print(A_even,A_odd)     
-
+A_even,A_odd = gen_rhs(W_t, W_b, DW_t, DW_b, Z_t, Z_b, lmax, nr, eta)   
 
 W,DW,Z = matrix_solve(A_even, A_odd, freq, E, eta, lmax, nr, m)
         
@@ -46,16 +44,14 @@ q_r,q_theta,q_phi,kin_e = calc_kinetics(W, DW, Z, eta, m, theta)
 
 fig,ax = plt.subplots(1,1,figsize=(5,5),dpi=200)
 
-
-field = q_phi
+field = kin_e
 field = np.real(field)
 
+#norm = colors.TwoSlopeNorm(vmin=np.min(field),vmax=np.max(field),vcenter=0)
 
-norm = colors.TwoSlopeNorm(vmin=np.min(field),vmax=np.max(field),vcenter=0)
+log_levs = np.logspace(np.log10(np.min(field)),np.log10(np.max(field)),200)
 
-#log_levs = np.logspace(np.log10(np.min(field)),np.log10(np.max(field)),200)
-
-#norm = colors.LogNorm(np.min(field),vmax = np.max(field))
+norm = colors.LogNorm(np.min(field),vmax = np.max(field))
 #norm = colors.SymLogNorm(vmin=np.min(field),vmax=np.max(field),linthresh=0.01)
 
 zz = np.array([[rr[i] * np.cos(theta[j]) for j in range(ntheta)] for i in range(nr)])
@@ -63,7 +59,7 @@ xx = np.array([[rr[i] * np.sin(theta[j]) for j in range(ntheta)] for i in range(
 
 
 
-p=ax.contourf(xx,zz,field,cmap = 'seismic',levels=200,norm=norm)
+p=ax.contourf(xx,zz,field,cmap = 'jet',levels=log_levs,norm=norm)
 #fig.colorbar(p)
 
 ax.plot([0,0],[-r_i,-r_o],color='k',lw=0.5,alpha=0.3)
